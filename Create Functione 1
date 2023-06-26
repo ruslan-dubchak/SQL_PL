@@ -96,7 +96,7 @@ select
 from inventory i 
 join rental r on r.inventory_id = i.inventory_id 
 join payment p on p.rental_id = r.rental_id 
-where film_id = amount_per_date.film_id
+where film_id = amount_per_date.film_id and p.amount !=0
 group by i.film_id ,
 	 date_trunc('day', p.payment_date) 
 order by date_trunc('day', p.payment_date)
