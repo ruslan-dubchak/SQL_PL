@@ -4,7 +4,7 @@
 -- сколько раз фильм сдавали в аренду (кол-во записей в rental) (рассчитать отдельной функцией, которая принимает на вход film_id)
 
 drop function if exists count_film_inventory;
-create function count_film_inventory(film_id int) returns bigint 
+create function count_film_inventory(film_id int) returns int8
 as $$
 select count(i.inventory_id) 
 from inventory i 
@@ -13,7 +13,7 @@ $$ language sql;
 
 
 drop function if exists count_rental_film;
-create function count_rental_film(film_id int) returns bigint 
+create function count_rental_film(film_id int) returns int8 
 as $$
 select count(i.inventory_id)
 from inventory i 
@@ -34,12 +34,12 @@ group by f.film_id
 --Написать запрос с пример использования этой функции.
 
 drop function if exists bigger;
-create function bigger (in V1 int,in V2 int , out int)
+create function bigger (in V1 int,in V2 int , out V3 int)
 as $$
 select 
  case 
  	when V1>V2 then V1
- 	when V1=V2 then 0
+ 	when V1=V2 then Null
  	else V2
  end
  $$ language sql;
