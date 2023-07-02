@@ -77,7 +77,6 @@ $$ language sql
 call fill_a(7,null);
 select avg(a) from a;
 
-
 --* Создать процедуру, которая будет наполнять таблицу rental новыми записями.
 
 --Принимает параметры:
@@ -88,6 +87,45 @@ select avg(a) from a;
 
 
 --Компакт диски для сдачи выбираем случайным образом.
+
+drop function if exists fill_na_null_function ;
+create function  fill_na_null_function(dt date default null ) returns void  
+as $$
+INSERT INTO rental
+		(rental_date, 
+		inventory_id, 
+		customer_id, 
+		return_date, 
+		staff_id, 
+		last_update)
+VALUES((select 
+	         case when dt is null then (select max(rental_date) from rental)+interval '24 hours'
+	         	  else dt 
+	         end), 
+         (select floor(random() * (max(inventory_id)-min(inventory_id)+1))+1 from rental),                
+         (select floor(random() * (max(customer_id)-min(customer_id)+1))+1 from rental),
+         (select
+	         case when dt is null then (select max(rental_date) from rental )+ interval '24 hours' + interval '168 hours'
+	         	  else dt+7  
+	         end),    
+         (select floor(random() * (max(staff_id)-min(staff_id)+1))+1 from rental), 
+         now());
+$$ language sql;
+
+
+drop procedure if exists fill_null_nm_dt;
+create procedure fill_null_nm_dt (in nm int, dt date default null)
+as $$
+	select fill_na_null_function(dt)
+	from generate_series(1,nm); 
+$$ language sql;
+
+call fill_null_nm_dt(3)
+call fill_null_nm_dt(4,'2005-07-22')
+
+select *
+from rental r 
+order by last_update desc 
 
 
 
