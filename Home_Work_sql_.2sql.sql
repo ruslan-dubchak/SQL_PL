@@ -127,8 +127,45 @@ select *
 from rental r 
 order by last_update desc 
 
+-------------------------------------
+-- Второй Вариант с Coalesce + типы со своих данных: Customer, Staff , Inventory 
+drop function if exists fill_na_null_function_coalesce;
+create function  fill_na_null_function_coalesce (dt date default null ) returns void  
+as $$
+INSERT INTO rental
+		(rental_date, 
+		inventory_id, 
+		customer_id, 
+		return_date, 
+		staff_id, 
+		last_update)
+VALUES((select coalesce (dt,(select max(rental_date) from rental)+interval '24 hours')), 
+        (select floor(random() * (max(inventory_id)-min(inventory_id)+1))+1 from inventory),                
+        (select floor(random() * (max(customer_id)-min(customer_id)+1))+1 from customer),
+        (select
+	         case when dt is null then (select max(rental_date) from rental )+ interval '24 hours' + interval '168 hours'
+	         	  else dt+7  
+	         end),    
+         (select floor(random() * (max(staff_id)-min(staff_id)+1))+1 from staff), 
+         now());
+$$ language sql;
 
+------------------------
+drop procedure if exists fill_null_nm_dt_coalesce;
+create procedure fill_null_nm_dt_coalesce (in nm int, dt date default null)
+as $$
+	select fill_na_null_function_coalesce(dt)
+	from generate_series(1,nm); 
+$$ language sql;
 
+-------------------------------
+
+call fill_null_nm_dt_coalesce(4);
+call fill_null_nm_dt_coalesce(2,'2005-07-22');
+
+select *
+from rental r 
+order by last_update desc 
 
 
 
